@@ -1,10 +1,12 @@
-# ZenRows Skill for OpenClaw
+# 🔍 zenrows-skill
 
-A ready-to-use [OpenClaw](https://github.com/openclaw/openclaw) skill that integrates the [ZenRows Universal Scraper API](https://www.zenrows.com/) for reliable web content extraction — even from sites protected by Cloudflare, DataDome, and other anti-bot systems.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-6366F1)](https://clawhub.com)
+[![shellcheck](https://github.com/Penguin-Life/zenrows-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/Penguin-Life/zenrows-skill/actions/workflows/ci.yml)
 
-## What It Does
+**Web scraping skill for [OpenClaw](https://github.com/openclaw/openclaw) agents — powered by [ZenRows](https://www.zenrows.com/).**
 
-ZenRows acts as a smart proxy layer between your agent and the web. When `web_fetch` fails due to anti-bot protection, JavaScript-rendered content, or geo-restrictions, ZenRows handles:
+When `web_fetch` fails due to anti-bot protection, JS-rendered content, or geo-restrictions, ZenRows handles it:
 
 - **Anti-bot bypass** — Cloudflare, DataDome, PerimeterX, etc.
 - **JavaScript rendering** — SPAs, dynamic content, lazy-loaded pages
@@ -12,126 +14,72 @@ ZenRows acts as a smart proxy layer between your agent and the web. When `web_fe
 - **Proxy rotation** — Residential proxies from 190+ countries
 - **Output formats** — HTML, Markdown, Plaintext, PDF, Screenshots
 
-## Quick Start
+---
 
-### 1. Install the Skill
+## Quick Start (OpenClaw)
 
-Copy the `zenrows/` folder into your OpenClaw skills directory:
+1. Install:
+   ```bash
+   clawhub install Penguin-Life/zenrows-skill
+   ```
 
-```bash
-cp -r zenrows/ ~/openclaw/skills/zenrows/
-```
+2. Add your API key to `openclaw.json`:
+   ```json
+   {
+     "env": {
+       "vars": {
+         "ZENROWS_API_KEY": "your-api-key-here"
+       }
+     }
+   }
+   ```
+   Get a key at [zenrows.com](https://www.zenrows.com/) (free tier: 1,000 credits).
 
-Or clone this repo and symlink:
+3. Restart OpenClaw:
+   ```bash
+   openclaw gateway restart
+   ```
 
-```bash
-git clone https://github.com/Penguin-Life/zenrows-skill.git
-ln -s "$(pwd)/zenrows-skill/zenrows" ~/openclaw/skills/zenrows
-```
+4. Ask your agent:
+   > "Fetch https://protected-site.com as markdown"
 
-### 2. Configure Your API Key
+---
 
-Add your ZenRows API key to `openclaw.json` under `env.vars`:
-
-```json
-{
-  "env": {
-    "vars": {
-      "ZENROWS_API_KEY": "your-api-key-here"
-    }
-  }
-}
-```
-
-Get your API key at [zenrows.com](https://www.zenrows.com/) (free tier available with 1,000 credits).
-
-### 3. Restart OpenClaw
-
-```bash
-openclaw gateway restart
-```
-
-The skill will be auto-discovered on next session.
-
-## Usage
-
-### Shell Script (Recommended for Agents)
-
-The bundled `scripts/zenrows.sh` wraps the full API into a simple CLI:
+## Standalone CLI
 
 ```bash
 # Basic fetch
-scripts/zenrows.sh "https://example.com"
+./zenrows/scripts/zenrows.sh "https://example.com"
 
-# Get markdown output (ideal for LLM context)
-scripts/zenrows.sh "https://example.com" --markdown
+# Markdown output (ideal for LLM context)
+./zenrows/scripts/zenrows.sh "https://example.com" --markdown
 
-# Auto mode — ZenRows picks the optimal anti-bot strategy
-scripts/zenrows.sh "https://protected-site.com" --auto
+# Auto mode (ZenRows picks optimal anti-bot strategy)
+./zenrows/scripts/zenrows.sh "https://protected-site.com" --auto
 
 # JS rendering for SPAs
-scripts/zenrows.sh "https://spa-app.com" --js --wait-for ".content-loaded"
+./zenrows/scripts/zenrows.sh "https://spa-app.com" --js --wait-for ".content"
 
 # Extract structured data with CSS selectors
-scripts/zenrows.sh "https://news.site.com/article" \
-  --css '{"title":"h1","body":".article-body","author":".byline"}'
+./zenrows/scripts/zenrows.sh "https://news.site.com" \
+  --css '{"title":"h1","body":".article-body"}'
 
-# Fetch from a specific country
-scripts/zenrows.sh "https://geo-restricted.com" --premium --country us
-
-# Plaintext output
-scripts/zenrows.sh "https://example.com" --text
+# Specific country proxy
+./zenrows/scripts/zenrows.sh "https://geo-restricted.com" --premium --country us
 ```
 
-### Direct API (curl)
+### Example Output
 
-```bash
-# Minimal request
-curl "https://api.zenrows.com/v1/?apikey=$ZENROWS_API_KEY&url=https://example.com"
+```
+$ ./zenrows.sh "https://example.com" --markdown
 
-# With JS rendering + markdown output
-curl "https://api.zenrows.com/v1/?apikey=$ZENROWS_API_KEY&url=https://example.com&js_render=true&response_type=markdown"
+# Example Domain
 
-# Adaptive Stealth Mode
-curl "https://api.zenrows.com/v1/?apikey=$ZENROWS_API_KEY&url=https://example.com&mode=auto"
+This domain is for use in illustrative examples in documents.
+You may use this domain in literature without prior coordination...
 ```
 
-## Script Options Reference
-
-| Option | Description |
-|--------|-------------|
-| `--auto` | Adaptive Stealth Mode — auto-selects optimal config |
-| `--js` | Enable JavaScript rendering (headless browser) |
-| `--premium` | Use residential/premium proxies |
-| `--country <CC>` | Proxy from specific country (2-letter code, implies `--premium`) |
-| `--markdown` | Return content as Markdown |
-| `--text` | Return content as plaintext |
-| `--pdf` | Return content as PDF |
-| `--autoparse` | Auto-extract structured data |
-| `--css '<json>'` | CSS selector extraction (JSON object) |
-| `--wait <ms>` | Wait fixed milliseconds (requires `--js`) |
-| `--wait-for <sel>` | Wait for CSS selector to appear (requires `--js`) |
-| `--block <types>` | Block resources: `stylesheet,image,media,font,script` |
-| `--session <id>` | Reuse same IP across requests (requires `--premium`) |
-| `--captcha` | Auto-solve CAPTCHAs (implies `--js --premium`) |
-| `--screenshot` | Return base64 screenshot (implies `--js`) |
-| `--json` | Wrap response in JSON with headers/status |
-| `--device <d>` | `desktop` or `mobile` user-agent (implies `--js`) |
-| `--post <body>` | Send POST request with body |
-| `--header <H:V>` | Add custom header (repeatable) |
-| `-o <file>` | Write output to file |
-| `-v` | Verbose mode |
-
-## Credit Costs
-
-| Configuration | Credits |
-|--------------|---------|
-| Basic (HTML only) | 1 |
-| JS rendering (`--js`) | 5 |
-| Premium proxies (`--premium`) | 5 |
-| JS + Premium | 10 |
-| CAPTCHA solving (`--captcha`) | +25 |
-| Auto mode (`--auto`) | Variable (billed for what works) |
+---
 
 ## When to Use ZenRows vs web_fetch
 
@@ -142,27 +90,65 @@ Need web content?
 │   └── ❌ Blocked / empty / broken
 │       ├── Static site, basic protection → zenrows (1 credit)
 │       ├── JS-heavy SPA → zenrows --js (5 credits)
-│       ├── Strong anti-bot → zenrows --auto (auto-optimized)
-│       └── Need structured extraction → zenrows --css or --autoparse
+│       ├── Strong anti-bot → zenrows --auto (variable)
+│       └── Structured extraction → zenrows --css / --autoparse
 └── Need markdown/text for LLM? → zenrows --markdown / --text
 ```
 
-## Skill Structure
+## Credit Costs
+
+| Config | Credits |
+|--------|---------|
+| Basic (HTML only) | 1 |
+| JS rendering (`--js`) | 5 |
+| Premium proxies (`--premium`) | 5 |
+| JS + Premium | 10 |
+| CAPTCHA solving (`--captcha`) | +25 |
+| Auto mode (`--auto`) | Variable |
+
+## CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--auto` | Adaptive Stealth Mode |
+| `--js` | Enable JS rendering |
+| `--premium` | Residential proxies |
+| `--country <CC>` | Proxy country (implies --premium) |
+| `--markdown` | Markdown output |
+| `--text` | Plaintext output |
+| `--pdf` | PDF output |
+| `--autoparse` | Auto-extract structured data |
+| `--css '<json>'` | CSS selector extraction |
+| `--wait <ms>` | Wait fixed ms (requires --js) |
+| `--wait-for <sel>` | Wait for CSS selector (requires --js) |
+| `--captcha` | Auto-solve CAPTCHAs |
+| `--screenshot` | Base64 screenshot |
+| `--json` | JSON response with headers |
+| `-o <file>` | Write to file |
+| `-v` | Verbose mode |
+
+See [`zenrows/SKILL.md`](zenrows/SKILL.md) for the full API parameter reference.
+
+---
+
+## Project Structure
 
 ```
-zenrows/
-├── SKILL.md              # Full skill instructions (auto-loaded by OpenClaw)
-└── scripts/
-    └── zenrows.sh        # CLI wrapper for the ZenRows API
+zenrows-skill/
+├── skill.json              # Package manifest
+├── README.md               # This file
+├── zenrows/
+│   ├── SKILL.md            # Full agent instructions + API reference
+│   └── scripts/
+│       └── zenrows.sh      # CLI wrapper
+└── .github/workflows/
+    └── ci.yml              # shellcheck + smoke tests
 ```
-
-## API Documentation
-
-For the complete ZenRows API reference, see:
-- [ZenRows API Docs](https://docs.zenrows.com/universal-scraper-api/api-reference)
-- [JS Instructions](https://docs.zenrows.com/universal-scraper-api/features/js-instructions)
-- [Error Codes](https://docs.zenrows.com/api-error-codes)
 
 ## License
 
-MIT
+[MIT](LICENSE)
+
+---
+
+Built with 🐧 by [Penguin-Life](https://github.com/Penguin-Life)

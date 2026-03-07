@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint zenrows.sh
+        run: shellcheck zenrows/scripts/zenrows.sh
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Script is executable
+        run: test -x zenrows/scripts/zenrows.sh
+
+      - name: Help output
+        run: ./zenrows/scripts/zenrows.sh --help
+
+      - name: Missing API key fails
+        run: |
+          unset ZENROWS_API_KEY 2>/dev/null || true
+          ! ./zenrows/scripts/zenrows.sh "https://example.com" 2>/dev/null
+
+      - name: No args fails
+        env:
+          ZENROWS_API_KEY: "test"
+        run: "! ./zenrows/scripts/zenrows.sh 2>/dev/null"

@@ -1,0 +1,11 @@
+{
+  "name": "zenrows",
+  "version": "1.1.0",
+  "description": "Web scraping via ZenRows API — anti-bot bypass, JS rendering, CAPTCHA solving, proxy rotation, multi-format output",
+  "author": "Penguin-Life",
+  "repository": "https://github.com/Penguin-Life/zenrows-skill",
+  "license": "MIT",
+  "keywords": ["scraping", "web", "anti-bot", "cloudflare", "captcha", "proxy", "zenrows"],
+  "skill_dir": "zenrows",
+  "requires": ["curl"]
+}

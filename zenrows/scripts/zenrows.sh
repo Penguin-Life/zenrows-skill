@@ -10,7 +10,18 @@ MAX_RETRIES=2
 RETRY_DELAY=3
 TIMEOUT=120
 
-if [[ -z "${ZENROWS_API_KEY:-}" ]]; then
+# Check for --help / --version before requiring API key
+for arg in "$@"; do
+  case "$arg" in
+    --help|-h|--version) ;;
+    *) continue ;;
+  esac
+  # Matched help/version — skip API key check
+  SKIP_KEY_CHECK=1
+  break
+done
+
+if [[ -z "${SKIP_KEY_CHECK:-}" && -z "${ZENROWS_API_KEY:-}" ]]; then
   echo "Error: ZENROWS_API_KEY environment variable is not set." >&2
   exit 1
 fi
